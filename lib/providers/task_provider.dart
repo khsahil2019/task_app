@@ -5,6 +5,7 @@ import 'package:task_app/services/task_service.dart';
 class TaskProvider with ChangeNotifier {
   final TaskService _taskService = TaskService();
   List<Task> _tasks = [];
+  String _newTaskTitle = '';
 
   TaskProvider() {
     _taskService.getTasks().listen((tasks) {
@@ -14,6 +15,12 @@ class TaskProvider with ChangeNotifier {
   }
 
   List<Task> get tasks => _tasks;
+  String get newTaskTitle => _newTaskTitle;
+
+  set newTaskTitle(String value) {
+    _newTaskTitle = value;
+    notifyListeners();
+  }
 
   Future<void> addTask(Task task) async {
     await _taskService.addTask(task);
