@@ -36,7 +36,7 @@ class TaskProvider with ChangeNotifier {
 
   void toggleTaskCompletion(Task task) {
     task.completed = !task.completed;
-    updateTask(task); // Update task in Firestore
+    updateTask(task);
     notifyListeners();
   }
 }

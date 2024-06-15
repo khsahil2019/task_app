@@ -8,7 +8,6 @@ class CompletedTasksScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
 
-    // Filter tasks to show only completed tasks
     List<Task> completedTasks =
         taskProvider.tasks.where((task) => task.completed).toList();
 
@@ -32,8 +31,7 @@ class CompletedTasksScreen extends StatelessWidget {
               trailing: IconButton(
                 icon: Icon(Icons.undo),
                 onPressed: () {
-                  taskProvider
-                      .toggleTaskCompletion(task); // Mark task as incomplete
+                  taskProvider.toggleTaskCompletion(task);
                 },
               ),
             ),

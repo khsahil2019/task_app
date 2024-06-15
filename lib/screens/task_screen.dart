@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_app/models/task.dart';
 import 'package:task_app/providers/task_provider.dart';
-import 'completed_tasks_screen.dart'; // Import the new screen
+import 'completed_tasks_screen.dart';
 
 class TaskScreen extends StatefulWidget {
   @override
@@ -26,9 +26,7 @@ class _TaskScreenState extends State<TaskScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        CompletedTasksScreen()), // Navigate to completed tasks screen
+                MaterialPageRoute(builder: (context) => CompletedTasksScreen()),
               );
             },
           ),
@@ -52,45 +50,36 @@ class _TaskScreenState extends State<TaskScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: BorderSide(
-                          color: Colors.blue, // Border color
-                          width: 2.0, // Border width
+                          color: Colors.blue,
+                          width: 2.0,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: BorderSide(
-                          color: Colors.blue.shade200, // Enabled border color
-                          width: 2.0, // Border width
+                          color: Colors.blue.shade200,
+                          width: 2.0,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: BorderSide(
-                          color: Colors.blue, // Focused border color
-                          width: 2.0, // Border width
+                          color: Colors.blue,
+                          width: 2.0,
                         ),
                       ),
                     ),
                     style: TextStyle(fontSize: 16.0, color: Colors.black87),
                     cursorColor: Colors.blue,
                     onSubmitted: (value) {
-                      if (value.isNotEmpty) {
-                        final newTask =
-                            Task(id: DateTime.now().toString(), title: value);
-                        taskProvider.addTask(newTask);
-                        _newTaskController.clear(); // Clear text field
-                      }
+                      _addNewTask(taskProvider);
                     },
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.add),
                   onPressed: () {
-                    final newTask = Task(
-                        id: DateTime.now().toString(),
-                        title: _newTaskController.text);
-                    taskProvider.addTask(newTask);
-                    _newTaskController.clear(); // Clear text field
+                    _addNewTask(taskProvider);
                   },
                 ),
               ],
@@ -108,15 +97,31 @@ class _TaskScreenState extends State<TaskScreen> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                   child: ListTile(
-                    title: Text(
-                      task.title,
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                        color: task.completed ? Colors.grey : Colors.black,
-                        decoration:
-                            task.completed ? TextDecoration.lineThrough : null,
-                      ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            task.title,
+                            style: TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  task.completed ? Colors.grey : Colors.black,
+                              decoration: task.completed
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        if (task.completed)
+                          Text(
+                            ' Completed',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -137,7 +142,8 @@ class _TaskScreenState extends State<TaskScreen> {
                         Checkbox(
                           value: task.completed,
                           onChanged: (bool? value) {
-                            taskProvider.toggleTaskCompletion(task);
+                            _toggleTaskCompletion(
+                                context, taskProvider, task, value ?? false);
                           },
                         ),
                       ],
@@ -152,10 +158,14 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _newTaskController.dispose(); // Dispose the text controller
-    super.dispose();
+  void _addNewTask(TaskProvider taskProvider) {
+    String taskTitle = _newTaskController.text.trim();
+    if (taskTitle.isNotEmpty) {
+      final newTask = Task(
+          id: DateTime.now().toString(), title: taskTitle, completed: false);
+      taskProvider.addTask(newTask);
+      _newTaskController.clear();
+    }
   }
 
   Future<void> _showEditTaskDialog(
@@ -220,5 +230,44 @@ class _TaskScreenState extends State<TaskScreen> {
         );
       },
     );
+  }
+
+  void _toggleTaskCompletion(BuildContext context, TaskProvider taskProvider,
+      Task task, bool completed) {
+    if (completed) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Confirm Completion'),
+            content:
+                Text('Are you sure you want to mark this task as completed?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Mark Completed'),
+                onPressed: () {
+                  taskProvider.toggleTaskCompletion(task);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      taskProvider.toggleTaskCompletion(task);
+    }
+  }
+
+  @override
+  void dispose() {
+    _newTaskController.dispose();
+    super.dispose();
   }
 }
